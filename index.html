@@ -1,0 +1,51 @@
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<style>
+* {
+	font-family: sans-serif;
+}
+img {
+	height: 128px;
+	padding: 4px;
+}
+</style>
+</head>
+<body>
+<h1><a href="#">All</a></h1>
+<div id='content'></div>
+<script>
+function getHash() { return window.location.hash.substr(1); }
+function updatePage() {
+	$('#content').empty();
+	var hash = getHash();
+	var params = {};
+	if(hash != '') {
+		params.dir = hash;
+	}
+	$.get('images.json', params, function(res) {
+		if(hash == '') {
+			dirs = res;
+		}
+		var i = 0;
+		res.files.forEach(function (filename) {
+			if(res.dir == '') {
+				$('#content').append('<h2><a href="#' + i + '">' + filename + '</a><h2/>');
+				i++;
+			} else {
+				var url = 'images/' + res.dir + '/' + filename;
+				var article_id = filename.split('/').reverse()[0].split('_')[0];
+				var article_url = 'http://arxiv.org/abs/' + article_id;
+				$('#content').append('<a href="' + article_url + '" title="' + article_id + '"><img src="' + url + '"/></a>');
+			}
+		})
+	})
+}
+
+$(function() {
+	window.onhashchange = updatePage;
+	updatePage();
+})
+</script>
+</body>
+</html>
