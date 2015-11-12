@@ -56,15 +56,15 @@ for item in doc['items']:
 	url = item['link']
 	source_url = re.sub('abs', 'e-print', url)
 	item_id = re.sub('.+abs/', '', url)
-	tar_file = chache_dir + item_id + '.tar.gz'
+	tar_file = cache_dir + item_id + '.tar.gz'
 	print 'Processing ' + url + ' / ' + item_id + ' / ' + source_url
 	subprocess.call(['curl', '-L', '-o', tar_file, source_url])
-	subprocess.call(['tar', '-x', '-f', tar_file, '-C', chache_dir])
+	subprocess.call(['tar', '-x', '-f', tar_file, '-C', cache_dir])
 	subprocess.call(['rm', tar_file])
-	for i, filename in enumerate(get_matches(chache_dir, extensions)):
+	for i, filename in enumerate(get_matches(cache_dir, extensions)):
 		print '\t' + filename
 		output_name = image_dir + '{}_{}.png'.format(item_id, i)
 		subprocess.call(['convert', filename, '-resize', '65536@', output_name])
-subprocess.call(['rm', '-rf', chache_dir])
+subprocess.call(['rm', '-rf', cache_dir])
 
 subprocess.call(['fdupes', '-dN', image_dir])
