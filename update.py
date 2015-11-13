@@ -45,7 +45,6 @@ with open('metadata/' + date_id + '.json', 'w') as f:
 cache_dir = '.cache/'
 image_dir = 'images/' + date_id + '/'
 mkdirp(image_dir)
-mkdirp(cache_dir)
 extensions = ['pdf', 'jpg', 'jpeg', 'gif', 'png', 'eps']
 for item in doc['items']:
 	title = item['title']
@@ -61,10 +60,10 @@ for item in doc['items']:
 	subprocess.call(['curl', '-L', '-o', tar_file, source_url])
 	subprocess.call(['tar', '-x', '-f', tar_file, '-C', cache_dir])
 	subprocess.call(['rm', tar_file])
+	mkdirp(cache_dir)
 	for i, filename in enumerate(get_matches(cache_dir, extensions)):
 		print '\t' + filename
 		output_name = image_dir + '{}_{}.png'.format(item_id, i)
 		subprocess.call(['convert', filename, '-resize', '65536@', output_name])
-subprocess.call(['rm', '-rf', cache_dir])
-
+	subprocess.call(['rm', '-rf', cache_dir])
 subprocess.call(['fdupes', '-dN', image_dir])
