@@ -47,6 +47,7 @@ image_dir = 'images/' + date_id + '/'
 mkdirp(image_dir)
 extensions = ['pdf', 'jpg', 'jpeg', 'gif', 'png', 'eps']
 for item in doc['items']:
+	mkdirp(cache_dir)
 	title = item['title']
 	if re.search('arXiv:.+v1', title) is None:
 		print 'Skipping ' + title
@@ -60,7 +61,6 @@ for item in doc['items']:
 	subprocess.call(['curl', '-L', '-o', tar_file, source_url])
 	subprocess.call(['tar', '-x', '-f', tar_file, '-C', cache_dir])
 	subprocess.call(['rm', tar_file])
-	mkdirp(cache_dir)
 	for i, filename in enumerate(get_matches(cache_dir, extensions)):
 		print '\t' + filename
 		output_name = image_dir + '{}_{}.png'.format(item_id, i)
