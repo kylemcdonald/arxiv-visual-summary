@@ -8,6 +8,22 @@ import sys
 import re
 import os
 
+# can we get newer results from http://arxiv.org/list/cs/recent ?
+
+# 1. look through abstract for key terms (deep learn, deep conv, neural net, NN, RNN, CNN, LSTM, DNN)
+# 2. find the most interesting image
+# 	- usually the first N images in the paper are representative
+# 3. construct the tweet ingredients
+# 	- title
+# 	- tags (RNN, LSTM, CNN, etc.)
+# 	- image
+# 	- link
+# 3. shorten title
+# 	- use acronyms: deep learning -> DL, deep neural net(work)?(s) -> DNNs, neural net(work)?(s) -> NNs
+# 4. remove any tags that appear in the title
+# 5. shorten title to maxmimum length followed by ...
+# 6. post
+
 def mkdirp(dirname):
 	subprocess.call(['mkdir', '-p', dirname])
 
@@ -49,7 +65,7 @@ extensions = ['pdf', 'jpg', 'jpeg', 'gif', 'png', 'eps']
 for item in doc['items']:
 	mkdirp(cache_dir)
 	title = item['title']
-	if re.search('arXiv:.+v1', title) is None:
+	if re.search('UPDATED', title) is not None:
 		print 'Skipping ' + title
 		continue
 	print 'Downloading ' + title
@@ -67,3 +83,7 @@ for item in doc['items']:
 		subprocess.call(['convert', filename, '-resize', '65536@', output_name])
 	subprocess.call(['rm', '-rf', cache_dir])
 subprocess.call(['fdupes', '-dN', image_dir])
+
+subprocess.call(['./remove-oldest.sh', '7', 'images/'])
+subprocess.call(['./remove-oldest.sh', '7', 'metadata/'])
+
