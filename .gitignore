@@ -1,5 +1,7 @@
 .*
 !.gitignore
 metadata
+metadata.json
 images
+image_lists
 memory.pkl
