@@ -1,20 +1,66 @@
 <html>
 <head>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
 <style>
 * {
     font-family: sans-serif;
 }
 img {
     height: 128px;
+    max-width: 100%;
     padding: 4px;
+}
+.paper {
+    border: 1px solid #aaa;
+    padding: 1em;
+    margin: 1em;
+}
+.title {
+    font-size: 1.5em;
+    margin-top: 0;
+}
+.title>a {
+    text-decoration: none;
+}
+/*.paper:nth-child(even) {
+    background-color: #eee;
+}*/
+#search, #ui {
+    font-size: 1.2em;
+    margin: 0;
+    padding: 0;
+}
+button {
+    font-size: .75em;
+}
+#ui, /*.title,*/ .author, .summary, .all_images {
+    display: none;
+}
+a {
+    cursor: pointer;
+    cursor: hand;
 }
 </style>
 </head>
 <body>
-<h1><a href="#">All</a></h1>
+<p><a href="#">ArXiv Daily Visual Summary</a> (<a href="https://github.com/kylemcdonald/arxiv-visual-summary">source</a>) / <a href="http://twitter.com/#!/kcimc">Kyle McDonald</a></p>
+<div id='ui'>
+    <p><span id='total'></span> Papers from <span id='date'></span></p>
+    <p><input id='search' placeholder='Filter'></input></p>
+    <p>
+        <button id='toggle_title'>Title</button>
+        <button id='toggle_author'>Author</button>
+        <button id='toggle_summary'>Summary</button>
+        <button id='toggle_all_images'>All Images</button>
+    <p>
+</div>
 <div id='content'></div>
 <script>
+var max_images = 10;
+function getDateString(dateId) {
+    return moment(dateId, 'DDMMYY').format('dddd, MMMM Do YYYY');
+}
 function getHash() { return window.location.hash.substr(1); }
 function updatePage() {
     $('#content').empty();
@@ -25,32 +71,104 @@ function updatePage() {
             renderIndex(mres);
         } else {
             var dir = mres[hash];
-            $.get('image_lists/' + dir + '.json', function (res) {
-                renderDir(dir, res);
+            console.log('Getting image_lists/' + dir + '.json');
+            $.get('image_lists/' + dir + '.json', function (ilres) {
+                console.log('Getting metadata/' + dir + '.json');
+                $.get('metadata/' + dir + '.json', function (imres) {
+                    renderDir(dir, imres, ilres);                    
+                })
             })
         }
     })
 }
 function renderIndex(metadata) {
     console.log('Rendering index.');
+    $('#ui').hide();
     var i = 0;
-    metadata.forEach(function (filename) {
-        $('#content').append('<h2><a href="#' + i + '">' + filename + '</a><h2/>');
+    metadata.forEach(function (dir) {
+        var date = getDateString(dir);
+        $('#content').append('<h2><a href="#' + i + '">' + date + '</a><h2/>');
         i++;
     })
 }
-function renderDir(dir, filenames) {
-    console.log('Rendering dir.');
+function renderDir(dir, metadata, filenames) {
+    console.log('Rendering dir ' + dir);
+    $('#ui').show();
+    $('#date').text(getDateString(dir));
+    var mapped = {};
     filenames.forEach(function (filename) {
-        var url = 'images/' + dir + '/' + filename;
-        var article_id = filename.split('/').reverse()[0].split('_')[0];
-        var article_url = 'http://arxiv.org/abs/' + article_id;
-        $('#content').append('<a href="' + article_url + '" title="' + article_id + '"><img src="' + url + '"/></a>');
+        var id = filename.split('_')[0];
+        if(!(id in mapped)) {
+            mapped[id] = [];
+        }
+        mapped[id].push(filename);
     })
+    metadata.forEach(function (paper) {
+        var id = paper.link.split('/').reverse()[0];
+        if(id in mapped) {
+            var title = paper.title.replace(/ \(arX.+/g,'');
+            var summary = paper.summary.replace(/<\/?p>/g,'');
+            summary = summary.replace(/<a.+/g,'');
+
+            var html = '';
+            html += "<p class='title'>" +
+                "<a onclick=\"toggle('" + id + "')\">+</a>&nbsp;" +
+                "<a href='" + paper.link + "'>" + title + "</a>" +
+                "</p>";
+            html += "<p class='author'>" + paper.author + "</p>"; // has <a> tags
+            html += "<p class='summary'>" + summary + "</p>";
+
+            var article_url = 'http://arxiv.org/abs/' + id;
+            html += '<a href="' + article_url + '" title="' + id + '">';
+            var i = 0;
+            mapped[id].forEach(function (filename) {
+                var img_url = 'images/' + dir + '/' + filename;
+                html += '<img src="' + img_url + '"' +
+                    (i > max_images ? ' class="all_images"' : '') +
+                    '/>';
+                i++;
+            })
+            html += '</a>';
+
+            var cssid = id.replace('.','_');
+            $('#content').append("<div id='" + cssid + "' class='paper'>" + html + "</div>");
+        }
+    })
+    updateTotal();
+}
+function toggle(id) {
+    var cssid = id.replace('.','_');
+    $('#'+cssid+' .author').toggle();
+    $('#'+cssid+' .summary').toggle();
+    $('#'+cssid+' .all_images').toggle();
+}
+function updateTotal() {
+    $('#total').text($(".paper:visible").length);
+}
+function searchUpdate() {
+    var query = new RegExp($('#search').val(), 'i');
+    $('.paper').each(function(i, x) {
+        var elt = $(x);
+        if (query == '') {
+            elt.show();
+        } else {
+            if(elt.text().search(query) > -1) {
+                elt.show();
+            } else {
+                elt.hide();
+            }
+        }
+    })
+    updateTotal();
 }
 
 $(function() {
     window.onhashchange = updatePage;
+    $('#search').on('input', searchUpdate);
+    $('#toggle_title').click(function() {$('.title').toggle()});
+    $('#toggle_author').click(function() {$('.author').toggle()});
+    $('#toggle_summary').click(function() {$('.summary').toggle()});
+    $('#toggle_all_images').click(function() {$('.all_images').toggle()});
     updatePage();
 })
 </script>
