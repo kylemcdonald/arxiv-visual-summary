@@ -58,8 +58,11 @@ a {
 <div id='content'></div>
 <script>
 var max_images = 10;
+function getDate(dateId) {
+    return moment(dateId, 'DDMMYY');
+}
 function getDateString(dateId) {
-    return moment(dateId, 'DDMMYY').format('dddd, MMMM Do YYYY');
+    return getDate(dateId).format('dddd, MMMM Do YYYY');
 }
 function getHash() { return window.location.hash.substr(1); }
 function updatePage() {
@@ -67,6 +70,7 @@ function updatePage() {
     var hash = getHash();
     console.log('Getting metadata.json');
     $.get('metadata.json', function (mres) {
+        console.log(mres)
         if(hash == '') {
             renderIndex(mres);
         } else {
@@ -85,6 +89,9 @@ function renderIndex(metadata) {
     console.log('Rendering index.');
     $('#ui').hide();
     var i = 0;
+    metadata.sort(function(x, y) {
+        return getDate(x) < getDate(y);
+    })
     metadata.forEach(function (dir) {
         var date = getDateString(dir);
         $('#content').append('<h2><a href="#' + i + '">' + date + '</a><h2/>');
