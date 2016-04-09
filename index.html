@@ -74,6 +74,9 @@ function updatePage() {
     var hash = getHash();
     console.log('Getting metadata.json');
     $.get('metadata.json', function (mres) {
+        mres.sort(function(x, y) {
+            return getDate(x) < getDate(y);
+        })
         if(hash == '') {
             renderIndex(mres);
         } else {
@@ -92,9 +95,6 @@ function renderIndex(metadata) {
     console.log('Rendering index.');
     $('#ui').hide();
     var i = 0;
-    metadata.sort(function(x, y) {
-        return getDate(x) < getDate(y);
-    })
     metadata.forEach(function (dir) {
         var date = getDateString(dir);
         $('#content').append('<h2><a href="#' + i + '">' + date + '</a><h2/>');
