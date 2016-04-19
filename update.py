@@ -8,22 +8,6 @@ import sys
 import re
 import os
 
-# can we get newer results from http://arxiv.org/list/cs/recent ?
-
-# 1. look through abstract for key terms (deep learn, deep conv, neural net, NN, RNN, CNN, LSTM, DNN)
-# 2. find the most interesting image
-#   - usually the first N images in the paper are representative
-# 3. construct the tweet ingredients
-#   - title
-#   - tags (RNN, LSTM, CNN, etc.)
-#   - image
-#   - link
-# 3. shorten title
-#   - use acronyms: deep learning -> DL, deep neural net(work)?(s) -> DNNs, neural net(work)?(s) -> NNs
-# 4. remove any tags that appear in the title
-# 5. shorten title to maxmimum length followed by ...
-# 6. post
-
 def mkdirp(dirname):
     subprocess.call(['mkdir', '-p', dirname])
 
